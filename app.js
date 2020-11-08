@@ -1,31 +1,45 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
-
-const app = express();
 const mongoose = require('mongoose');
+
+const {
+  PORT = 3000,
+  NODE_ENV,
+  DATABASE_ADDRESS,
+  DEV_DATABASE_ADDRESS,
+} = process.env;
+
+const helmet = require('helmet');
+const cors = require('cors');
 const bodyParser = require('body-parser');
 const { errors } = require('celebrate');
-const { userRouter } = require('./routes/users');
-const { articleRouter } = require('./routes/articles');
-const NotFoundError = require('./errors/not-found-err');
-const { login, createUser } = require('./controllers/users');
+const limiter = require('./middlewares/limiter');
+const errorsHandler = require('./middlewares/errorsHandler');
 const auth = require('./middlewares/auth');
 const { validateLogin, validateCreateUser } = require('./middlewares/requestValidation');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 
-const { PORT = 3000 } = process.env;
+const app = express();
 
-mongoose.connect('mongodb://localhost:27017/news-explorer-db', {
+const NotFoundError = require('./errors/not-found-err');
+const messages = require('./utils/messages');
+const router = require('./routes/index');
+const { login, createUser } = require('./controllers/users');
+
+mongoose.connect(NODE_ENV === 'production' ? DATABASE_ADDRESS : DEV_DATABASE_ADDRESS, {
   useNewUrlParser: true,
   useCreateIndex: true,
   useFindAndModify: false,
   useUnifiedTopology: true,
 });
 
-app.use(bodyParser.json());
+app.use(helmet());
 
 app.use(cors());
+
+app.use(limiter);
+
+app.use(bodyParser.json());
 
 app.use(requestLogger);
 
@@ -34,30 +48,17 @@ app.post('/signup', validateCreateUser, createUser);
 
 app.use(auth);
 
-app.use(userRouter);
-app.use(articleRouter);
+app.use(router);
 
 app.all('*', (req, res, next) => {
-  next(new NotFoundError('Запрашиваемый ресурс не найден'));
+  next(new NotFoundError(messages.resourceNotFound));
 });
 
 app.use(errorLogger);
 
 app.use(errors());
 
-app.use((err, req, res, next) => {
-  const { statusCode = 500, message } = err;
-
-  res
-    .status(statusCode)
-    .send({
-      message: statusCode === 500
-        ? 'На сервере произошла ошибка'
-        : message,
-    });
-
-  next();
-});
+app.use(errorsHandler);
 
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);

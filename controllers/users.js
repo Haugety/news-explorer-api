@@ -1,4 +1,4 @@
-const { NODE_ENV, JWT_SECRET } = process.env;
+const { NODE_ENV, JWT_SECRET, DEV_JWT_SECRET } = process.env;
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -6,6 +6,7 @@ const User = require('../models/user');
 const NotFoundError = require('../errors/not-found-err');
 const UnauthorizedError = require('../errors/unauthorized-error');
 const ConflictingRequestError = require('../errors/conflicting-request-err');
+const messages = require('../utils/messages');
 
 const login = (req, res, next) => {
   const { email, password } = req.body;
@@ -13,12 +14,12 @@ const login = (req, res, next) => {
   User.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        throw new UnauthorizedError('Неправильные почта или пароль');
+        throw new UnauthorizedError(messages.invalidData);
       }
       return bcrypt.compare(password, user.password)
         .then((matched) => {
           if (!matched) {
-            return Promise.reject(new UnauthorizedError('Неправильные почта или пароль'));
+            return Promise.reject(new UnauthorizedError(messages.invalidData));
           }
           return user;
         });
@@ -26,11 +27,11 @@ const login = (req, res, next) => {
     .then((user) => {
       const token = jwt.sign(
         { _id: user._id },
-        NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret',
+        NODE_ENV === 'production' ? JWT_SECRET : DEV_JWT_SECRET,
         { expiresIn: '7d' },
       );
       if (!token) {
-        throw new UnauthorizedError('Токен не найден');
+        throw new UnauthorizedError(messages.tokenNotFound);
       }
       return res.status(200).send({ token });
     })
@@ -39,7 +40,7 @@ const login = (req, res, next) => {
 
 const getUser = (req, res, next) => {
   User.findOne({ _id: req.user._id })
-    .orFail(new NotFoundError('Данного пользователя нет в базе'))
+    .orFail(new NotFoundError(messages.userNotFound))
     .then((user) => res.status(200).send(user))
     .catch(next);
 };
@@ -53,12 +54,12 @@ const createUser = (req, res, next) => {
     }))
     .catch((err) => {
       if (err.name === 'MongoError' || err.code === 11000) {
-        throw new ConflictingRequestError('Пользователь с таким email уже зарегистрирован');
+        throw new ConflictingRequestError(messages.emailConflict);
       }
 
       next(err);
     })
-    .then(() => res.status(200).send({ message: 'Вы успешно зарегистрировались!' }))
+    .then(() => res.status(200).send({ message: messages.successRegistration }))
     .catch(next);
 };
 

@@ -1,8 +1,7 @@
 const router = require('express').Router();
+const messages = require('../utils/messages');
 
-const {
-  getUser,
-} = require('../controllers/users');
+const { getUser } = require('../controllers/users');
 const NotFoundError = require('../errors/not-found-err');
 
 router.get(
@@ -13,7 +12,7 @@ router.get(
 router.get(
   '/users/:char',
   (req, res, next) => {
-    next(new NotFoundError('Запрашиваемые данные отсутствуют'));
+    next(new NotFoundError(messages.resourceNotFound));
   },
 );
 
