@@ -1,4 +1,4 @@
-const { NODE_ENV, JWT_SECRET, DEV_JWT_SECRET } = process.env;
+const { NODE_ENV, JWT_SECRET } = process.env;
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -7,6 +7,7 @@ const NotFoundError = require('../errors/not-found-err');
 const UnauthorizedError = require('../errors/unauthorized-error');
 const ConflictingRequestError = require('../errors/conflicting-request-err');
 const messages = require('../utils/messages');
+const { devJwtSecret } = require('../utils/config');
 
 const login = (req, res, next) => {
   const { email, password } = req.body;
@@ -27,7 +28,7 @@ const login = (req, res, next) => {
     .then((user) => {
       const token = jwt.sign(
         { _id: user._id },
-        NODE_ENV === 'production' ? JWT_SECRET : DEV_JWT_SECRET,
+        NODE_ENV === 'production' ? JWT_SECRET : devJwtSecret,
         { expiresIn: '7d' },
       );
       if (!token) {

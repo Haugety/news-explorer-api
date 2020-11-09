@@ -6,7 +6,6 @@ const {
   PORT = 3000,
   NODE_ENV,
   DATABASE_ADDRESS,
-  DEV_DATABASE_ADDRESS,
 } = process.env;
 
 const helmet = require('helmet');
@@ -23,10 +22,11 @@ const app = express();
 
 const NotFoundError = require('./errors/not-found-err');
 const messages = require('./utils/messages');
+const { devDataBaseAddress } = require('./utils/config');
 const router = require('./routes/index');
 const { login, createUser } = require('./controllers/users');
 
-mongoose.connect(NODE_ENV === 'production' ? DATABASE_ADDRESS : DEV_DATABASE_ADDRESS, {
+mongoose.connect(NODE_ENV === 'production' ? DATABASE_ADDRESS : devDataBaseAddress, {
   useNewUrlParser: true,
   useCreateIndex: true,
   useFindAndModify: false,
