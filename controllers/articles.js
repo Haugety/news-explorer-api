@@ -38,16 +38,19 @@ const removeArticle = (req, res, next) => Article.findById(req.params._id).selec
   .orFail(new NotFoundError(messages.articleNotFound))
   .then((article) => {
     if (req.user._id.toString() === article.owner.toString()) {
-      article.remove();
-      res.status(200).send({
-        keyword: article.keyword,
-        title: article.title,
-        text: article.text,
-        date: article.date,
-        source: article.source,
-        link: article.link,
-        image: article.image,
-      });
+      article.remove()
+        .then(() => {
+          res.status(200)
+            .send({
+              keyword: article.keyword,
+              title: article.title,
+              text: article.text,
+              date: article.date,
+              source: article.source,
+              link: article.link,
+              image: article.image,
+            });
+        });
     } else {
       throw new ForbiddenError(messages.forbidden);
     }
