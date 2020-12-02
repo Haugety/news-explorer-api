@@ -7,7 +7,7 @@ const {
 const { validateCreateArticle, validateRemoveArticle } = require('../middlewares/requestValidation');
 
 router.delete(
-  '/articles/:_id',
+  '/articles/:articleId',
   validateRemoveArticle,
   removeArticle,
 );
