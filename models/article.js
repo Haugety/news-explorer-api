@@ -2,6 +2,10 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 
 const articleSchema = new mongoose.Schema({
+  id: {
+    type: String,
+    required: true,
+  },
   keyword: {
     type: String,
     required: true,

@@ -18,12 +18,13 @@ const validateCreateUser = celebrate({
 
 const validateRemoveArticle = celebrate({
   params: Joi.object().keys({
-    _id: Joi.string().hex().length(24),
+    articleId: Joi.string().hex().length(24).required(),
   }),
 });
 
 const validateCreateArticle = celebrate({
   body: Joi.object().keys({
+    id: Joi.string().required(),
     keyword: Joi.string().required(),
     title: Joi.string().required(),
     text: Joi.string().required(),

@@ -4,7 +4,7 @@ const NotFoundError = require('../errors/not-found-err');
 const ForbiddenError = require('../errors/forbidden-err');
 const messages = require('../utils/messages');
 
-const getArticles = (req, res, next) => Article.find({})
+const getArticles = (req, res, next) => Article.find({ owner: req.user._id })
   .then((data) => {
     if (!data) {
       throw new NotFoundError(messages.resourceNotFound);
@@ -14,6 +14,7 @@ const getArticles = (req, res, next) => Article.find({})
   .catch(next);
 
 const createArticle = (req, res, next) => Article.create({
+  id: req.body.id,
   keyword: req.body.keyword,
   title: req.body.title,
   text: req.body.text,
@@ -24,6 +25,7 @@ const createArticle = (req, res, next) => Article.create({
   owner: req.user._id,
 })
   .then((article) => res.status(200).send({
+    id: req.body.id,
     keyword: article.keyword,
     title: article.title,
     text: article.text,
@@ -34,7 +36,7 @@ const createArticle = (req, res, next) => Article.create({
   }))
   .catch(next);
 
-const removeArticle = (req, res, next) => Article.findById(req.params._id).select('+owner')
+const removeArticle = (req, res, next) => Article.findById(req.params.articleId).select('+owner')
   .orFail(new NotFoundError(messages.articleNotFound))
   .then((article) => {
     if (req.user._id.toString() === article.owner.toString()) {
@@ -42,6 +44,8 @@ const removeArticle = (req, res, next) => Article.findById(req.params._id).selec
         .then(() => {
           res.status(200)
             .send({
+              _id: article._id,
+              id: article.id,
               keyword: article.keyword,
               title: article.title,
               text: article.text,
