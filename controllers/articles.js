@@ -25,6 +25,7 @@ const createArticle = (req, res, next) => Article.create({
   owner: req.user._id,
 })
   .then((article) => res.status(200).send({
+    _id: article._id,
     id: req.body.id,
     keyword: article.keyword,
     title: article.title,
